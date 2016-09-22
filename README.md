@@ -1,4 +1,4 @@
-# hystrix-to-librato
+# hystrix-to-librato [![Build Status](https://travis-ci.org/ContaAzul/hystrix-to-librato.svg?branch=master)](https://travis-ci.org/ContaAzul/hystrix-to-librato)
 
 Sends Hystrix/Turbine stream metrics to Librato;
 
