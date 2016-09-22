@@ -17,19 +17,17 @@ import (
 func main() {
 	config := config.Get()
 	report := report.Librato(config.User, config.Token)
-	defer report.Close()
 	for _, cluster := range config.Clusters {
 		go read(config.URL, cluster, report)
 	}
 	// sleep forever
 	for {
-		time.Sleep(10 * time.Second)
-		log.Println(runtime.NumGoroutine(), "goroutines running")
+		time.Sleep(5 * time.Second)
+		log.Println(runtime.NumGoroutine(), "goroutines running...")
 	}
 }
 
-func restart(url, cluster string, report report.Report, err error) {
-	log.Println(err)
+func restart(url, cluster string, report report.Report) {
 	time.Sleep(10 * time.Second)
 	read(url, cluster, report)
 }
@@ -38,7 +36,7 @@ func read(url, cluster string, report report.Report) {
 	log.Println("Starting", cluster)
 	resp, err := http.Get(url + "?cluster=" + cluster)
 	if err != nil {
-		restart(url, cluster, report, err)
+		restart(url, cluster, report)
 		return
 	}
 	reader := bufio.NewReader(resp.Body)
@@ -46,7 +44,7 @@ func read(url, cluster string, report report.Report) {
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
-			restart(url, cluster, report, err)
+			restart(url, cluster, report)
 			return
 		}
 		sline := string(line)

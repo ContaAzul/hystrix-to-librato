@@ -8,7 +8,6 @@ import (
 // Report metrics somehow
 type Report interface {
 	Report(data models.Data, cluster string)
-	Close()
 }
 
 // Librato report type

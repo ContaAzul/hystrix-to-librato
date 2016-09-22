@@ -1,14 +1,9 @@
 package librato
 
 import (
-	"log"
-	"sync"
-
 	"github.com/caarlos0/hystrix-to-librato/internal/models"
 	librato "github.com/rcrowley/go-librato"
 )
-
-var lock = sync.RWMutex{}
 
 // New report type
 func New(user, token string) *Librato {
@@ -28,33 +23,14 @@ type Librato struct {
 
 // Report the given data to librato for the given cluster
 func (r *Librato) Report(data models.Data, cluster string) {
-	log.Println("Report", cluster)
-	go circuitOpen(data, r.client(cluster+"."+data.Group))
-	go latencies(data, r.client(cluster+"."+data.Name))
+	circuitOpen(data, r.user, r.token, cluster+"."+data.Group)
+	latencies(data, r.user, r.token, cluster+"."+data.Name)
 }
 
-// Close all clients
-func (r *Librato) Close() {
-	log.Println("Closing all librato clients...")
-	for _, client := range r.clients {
-		defer client.Wait()
-		defer client.Close()
-	}
-}
-
-func (r *Librato) client(source string) librato.Metrics {
-	client, ok := r.clients[source]
-	if !ok {
-		client = librato.NewSimpleMetrics(r.user, r.token, source)
-		log.Println("Creating new librato client for", source)
-		lock.Lock()
-		defer lock.Unlock()
-		r.clients[source] = client
-	}
-	return client
-}
-
-func latencies(data models.Data, m librato.Metrics) {
+func latencies(data models.Data, user, token, source string) {
+	m := librato.NewSimpleMetrics(user, token, source)
+	defer m.Wait()
+	defer m.Close()
 	m.NewCounter("hystrix.latency.100th") <- data.LatencieTotals.L100
 	m.NewCounter("hystrix.latency.99.5th") <- data.LatencieTotals.L99_5
 	m.NewCounter("hystrix.latency.99th") <- data.LatencieTotals.L99
@@ -67,7 +43,10 @@ func latencies(data models.Data, m librato.Metrics) {
 	m.NewCounter("hystrix.latency.mean") <- data.MeanLatency
 }
 
-func circuitOpen(data models.Data, m librato.Metrics) {
+func circuitOpen(data models.Data, user, token, source string) {
+	m := librato.NewSimpleMetrics(user, token, source)
+	defer m.Wait()
+	defer m.Close()
 	c := m.NewCounter("hystrix.circuit.open")
 	if isOpen(data.Open) {
 		c <- 1
