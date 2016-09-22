@@ -5,7 +5,7 @@ Sends Hystrix/Turbine stream metrics to Librato;
 ## How it works
 
 You pass down all configs via
-[environment variables](/blob/internal/config/config.go) and start up the
+[environment variables](/internal/config/config.go) and start up the
 binary.
 
 It will create a goroutine for each cluster being monitored, and will
