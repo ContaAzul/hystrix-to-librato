@@ -14,6 +14,8 @@ import (
 	"github.com/caarlos0/hystrix-to-librato/internal/report"
 )
 
+var waitTime = 5 * time.Second
+
 func main() {
 	config := config.Get()
 	report := report.Librato(config.User, config.Token)
@@ -22,36 +24,26 @@ func main() {
 	}
 	// sleep forever
 	for {
-		time.Sleep(5 * time.Second)
+		time.Sleep(waitTime)
 		log.Println(runtime.NumGoroutine(), "goroutines running...")
 	}
 }
 
-func restart(url, cluster string, report report.Report) {
-	time.Sleep(10 * time.Second)
-	read(url, cluster, report)
-}
-
 func read(url, cluster string, report report.Report) {
+	time.Sleep(waitTime)
 	log.Println("Starting", cluster)
 	resp, err := http.Get(url + "?cluster=" + cluster)
 	if err != nil {
-		restart(url, cluster, report)
+		read(url, cluster, report)
 		return
 	}
-	reader := bufio.NewReader(resp.Body)
-	defer resp.Body.Close()
-	for {
-		line, err := reader.ReadBytes('\n')
-		if err != nil {
-			restart(url, cluster, report)
-			return
-		}
-		sline := string(line)
-		if !isData(sline) || !isCircuitReport(sline) {
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !isData(line) || !isCircuitReport(line) {
 			continue
 		}
-		doReport(report, cluster, sline)
+		doReport(report, cluster, line)
 	}
 }
 
