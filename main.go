@@ -46,6 +46,7 @@ func read(url, cluster string, report report.Report) {
 		}
 		doReport(report, cluster, line)
 	}
+	read(url, cluster, report)
 }
 
 func doReport(report report.Report, cluster, line string) {
