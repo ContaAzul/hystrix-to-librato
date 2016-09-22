@@ -1,0 +1,8 @@
+hash: f723a94e0592159fb12d3eee44e480c4bf437a3850975716151a223c592a6165
+updated: 2016-09-22T15:27:04.778144-03:00
+imports:
+- name: github.com/caarlos0/env
+  version: 65331f179c42e3ffe33457b69bee55472a779cd6
+- name: github.com/rcrowley/go-librato
+  version: a17ea15e933f52d83d7d38ac16153fe33e34f1f0
+testImports: []

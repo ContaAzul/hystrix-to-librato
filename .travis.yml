@@ -1,0 +1,6 @@
+language: go
+go: 1.7
+install:
+  - go get github.com/Masterminds/glide
+  - glide install
+script: go test -cover `glide nv`
