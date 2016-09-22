@@ -34,6 +34,7 @@ func read(url, cluster string, report report.Report) {
 	log.Println("Starting", cluster)
 	resp, err := http.Get(url + "?cluster=" + cluster)
 	if err != nil {
+		log.Println(err)
 		read(url, cluster, report)
 		return
 	}
