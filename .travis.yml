@@ -5,7 +5,7 @@ install:
   - glide install
 script: go test -cover `glide nv`
 after_success:
-  if [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+  if [ ! -z "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
     curl -o /tmp/release https://raw.githubusercontent.com/caarlos0/go-releaser/master/release
     chmod +x /tmp/release
     /tmp/release -u ContaAzul -r hystrix-to-librato -b hystrix-to-librato -m .
