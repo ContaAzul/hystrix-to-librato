@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/caarlos0/hystrix-to-librato/internal/config"
-	"github.com/caarlos0/hystrix-to-librato/internal/models"
-	"github.com/caarlos0/hystrix-to-librato/internal/report"
+	"github.com/ContaAzul/hystrix-to-librato/internal/config"
+	"github.com/ContaAzul/hystrix-to-librato/internal/models"
+	"github.com/ContaAzul/hystrix-to-librato/internal/report"
 )
 
 var waitTime = 5 * time.Second

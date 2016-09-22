@@ -3,7 +3,7 @@ package config
 import (
 	"log"
 
-	"github.com/caarlos0/env"
+	"github.com/ContaAzul/env"
 )
 
 // Config config struct

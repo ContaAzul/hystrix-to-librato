@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/caarlos0/hystrix-to-librato/internal/models"
+	"github.com/ContaAzul/hystrix-to-librato/internal/models"
 	librato "github.com/rcrowley/go-librato"
 )
 

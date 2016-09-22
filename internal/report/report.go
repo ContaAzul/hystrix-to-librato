@@ -1,8 +1,8 @@
 package report
 
 import (
-	"github.com/caarlos0/hystrix-to-librato/internal/models"
-	"github.com/caarlos0/hystrix-to-librato/internal/report/librato"
+	"github.com/ContaAzul/hystrix-to-librato/internal/models"
+	"github.com/ContaAzul/hystrix-to-librato/internal/report/librato"
 )
 
 // Report metrics somehow
