@@ -1,6 +1,10 @@
 package librato
 
 import (
+	"log"
+	"sync"
+	"time"
+
 	"github.com/caarlos0/hystrix-to-librato/internal/models"
 	librato "github.com/rcrowley/go-librato"
 )
@@ -10,7 +14,8 @@ func New(user, token string) *Librato {
 	return &Librato{
 		user:    user,
 		token:   token,
-		clients: make(map[string]librato.Metrics),
+		reports: make(map[string]time.Time),
+		lock:    sync.RWMutex{},
 	}
 }
 
@@ -18,17 +23,32 @@ func New(user, token string) *Librato {
 type Librato struct {
 	user    string
 	token   string
-	clients map[string]librato.Metrics
+	reports map[string]time.Time
+	lock    sync.RWMutex
 }
 
 // Report the given data to librato for the given cluster
 func (r *Librato) Report(data models.Data, cluster string) {
-	circuitOpen(data, r.user, r.token, cluster+"."+data.Group)
-	latencies(data, r.user, r.token, cluster+"."+data.Name)
+	r.circuitOpen(data, cluster+"."+data.Group)
+	r.latencies(data, cluster+"."+data.Group+"."+data.Name)
 }
 
-func latencies(data models.Data, user, token, source string) {
-	m := librato.NewSimpleMetrics(user, token, source)
+func (r *Librato) shouldReport(source string) bool {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	val, ok := r.reports[source]
+	if ok && time.Since(val).Seconds() < 5 {
+		return false
+	}
+	r.reports[source] = time.Now()
+	return true
+}
+func (r *Librato) latencies(data models.Data, source string) {
+	if !r.shouldReport(source) {
+		return
+	}
+	log.Println("Report", source)
+	m := librato.NewSimpleMetrics(r.user, r.token, source)
 	defer m.Wait()
 	defer m.Close()
 	m.NewCounter("hystrix.latency.100th") <- data.LatencieTotals.L100
@@ -43,8 +63,12 @@ func latencies(data models.Data, user, token, source string) {
 	m.NewCounter("hystrix.latency.mean") <- data.MeanLatency
 }
 
-func circuitOpen(data models.Data, user, token, source string) {
-	m := librato.NewSimpleMetrics(user, token, source)
+func (r *Librato) circuitOpen(data models.Data, source string) {
+	if !r.shouldReport(source) {
+		return
+	}
+	log.Println("Report", source)
+	m := librato.NewSimpleMetrics(r.user, r.token, source)
 	defer m.Wait()
 	defer m.Close()
 	c := m.NewCounter("hystrix.circuit.open")
