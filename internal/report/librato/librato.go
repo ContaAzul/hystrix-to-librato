@@ -47,7 +47,7 @@ func (r *Librato) latencies(data models.Data, source string) {
 	defer m.Close()
 
 	m.NewCounter("hystrix.latency.100th") <- data.LatencieTotals.L100
-	m.NewCounter("hystrix.latency.99.5th") <- data.LatencieTotals.L99_5
+	m.NewCounter("hystrix.latency.99.5th") <- data.LatencieTotals.L995
 	m.NewCounter("hystrix.latency.99th") <- data.LatencieTotals.L99
 	m.NewCounter("hystrix.latency.95th") <- data.LatencieTotals.L95
 	m.NewCounter("hystrix.latency.90th") <- data.LatencieTotals.L90
