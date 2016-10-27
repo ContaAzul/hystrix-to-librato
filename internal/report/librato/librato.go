@@ -2,6 +2,8 @@ package librato
 
 import (
 	"log"
+	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -10,21 +12,25 @@ import (
 )
 
 // New report type
-func New(user, token string) *Librato {
+func New(user, token string, metrics []string, interval time.Duration) *Librato {
 	return &Librato{
-		user:    user,
-		token:   token,
-		reports: make(map[string]time.Time),
-		lock:    sync.RWMutex{},
+		user:     user,
+		token:    token,
+		reports:  make(map[string]time.Time),
+		lock:     sync.RWMutex{},
+		metrics:  metrics,
+		interval: interval,
 	}
 }
 
 // Librato type
 type Librato struct {
-	user    string
-	token   string
-	reports map[string]time.Time
-	lock    sync.RWMutex
+	user     string
+	token    string
+	reports  map[string]time.Time
+	lock     sync.RWMutex
+	metrics  []string
+	interval time.Duration
 }
 
 // Report the given data to librato for the given cluster
@@ -46,16 +52,19 @@ func (r *Librato) latencies(data models.Data, source string) {
 	defer m.Wait()
 	defer m.Close()
 
-	m.NewCounter("hystrix.latency.100th") <- data.LatencieTotals.L100
-	m.NewCounter("hystrix.latency.99.5th") <- data.LatencieTotals.L995
-	m.NewCounter("hystrix.latency.99th") <- data.LatencieTotals.L99
-	m.NewCounter("hystrix.latency.95th") <- data.LatencieTotals.L95
-	m.NewCounter("hystrix.latency.90th") <- data.LatencieTotals.L90
-	m.NewCounter("hystrix.latency.75th") <- data.LatencieTotals.L75
-	m.NewCounter("hystrix.latency.50th") <- data.LatencieTotals.L50
-	m.NewCounter("hystrix.latency.25th") <- data.LatencieTotals.L25
-	m.NewCounter("hystrix.latency.0th") <- data.LatencieTotals.L0
-	m.NewCounter("hystrix.latency.mean") <- data.MeanLatency
+	latencies := reflect.ValueOf(data.LatencieTotals)
+	for _, metric := range r.metrics {
+		if metric == "mean" {
+			m.NewCounter("hystrix.latency.mean") <- data.MeanLatency
+			continue
+		}
+		name := strings.Replace(
+			strings.Replace(metric, ".", "", -1),
+			"th", "", -1,
+		)
+		latency := reflect.Indirect(latencies).FieldByName("L" + name)
+		m.NewCounter("hystrix.latency." + metric) <- latency.Int()
+	}
 }
 
 func (r *Librato) circuitOpen(data models.Data, source string) {
@@ -75,7 +84,7 @@ func (r *Librato) shouldReport(source string) bool {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	val, ok := r.reports[source]
-	if ok && time.Since(val).Seconds() < 5 {
+	if ok && time.Since(val).Seconds() < r.interval.Seconds() {
 		return false
 	}
 	r.reports[source] = time.Now()
