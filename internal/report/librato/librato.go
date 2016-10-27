@@ -84,7 +84,7 @@ func (r *Librato) shouldReport(source string) bool {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	val, ok := r.reports[source]
-	if ok && time.Since(val).Seconds() < 60 {
+	if ok && time.Since(val).Seconds() < r.interval {
 		return false
 	}
 	r.reports[source] = time.Now()
