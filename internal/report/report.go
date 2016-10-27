@@ -11,6 +11,6 @@ type Report interface {
 }
 
 // Librato report type
-func Librato(user, token string) Report {
-	return librato.New(user, token)
+func Librato(user, token string, metrics []string, interval int) Report {
+	return librato.New(user, token, metrics, interval)
 }

@@ -18,7 +18,9 @@ var waitTime = 5 * time.Second
 
 func main() {
 	config := config.Get()
-	report := report.Librato(config.User, config.Token)
+	report := report.Librato(
+		config.User, config.Token, config.ReportMetrics, config.ReportInterval,
+	)
 	for _, cluster := range config.Clusters {
 		go read(config.URL, cluster, report)
 	}
