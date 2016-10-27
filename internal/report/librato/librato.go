@@ -12,7 +12,7 @@ import (
 )
 
 // New report type
-func New(user, token string, metrics []string, interval int) *Librato {
+func New(user, token string, metrics []string, interval float64) *Librato {
 	return &Librato{
 		user:     user,
 		token:    token,
@@ -30,7 +30,7 @@ type Librato struct {
 	reports  map[string]time.Time
 	lock     sync.RWMutex
 	metrics  []string
-	interval int
+	interval float64
 }
 
 // Report the given data to librato for the given cluster
